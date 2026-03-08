@@ -1,0 +1,23 @@
+# Node
+node_modules/
+web/node_modules/
+
+# Python
+api/.venv/
+api/__pycache__/
+*.py[cod]
+
+# Env files
+.env
+.env.*
+
+# Build / framework outputs
+web/.next/
+web/out/
+web/dist/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
