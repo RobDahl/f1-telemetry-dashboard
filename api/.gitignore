@@ -5,6 +5,7 @@ __pycache__/
 *.so
 .venv/
 venv/
+.fastf1_cache/
 .env
 .env.*
 .pytest_cache/

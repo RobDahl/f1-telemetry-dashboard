@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from services.f1_service import get_driver_telemetry
@@ -21,4 +21,11 @@ async def health_check() -> dict[str, str]:
 
 @app.get("/telemetry")
 async def telemetry(year: int, session: str, driver: str) -> dict:
-    return await get_driver_telemetry(year=year, session=session, driver=driver)
+    try:
+        return await get_driver_telemetry(year=year, session=session, driver=driver)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(
+            status_code=500, detail=f"Failed to load telemetry: {exc}"
+        ) from exc

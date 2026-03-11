@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "description": "Monorepo for a FastAPI + Next.js F1 telemetry dashboard",
   "scripts": {
-    "dev": "concurrently -n API,WEB -c cyan,magenta \"python -m uvicorn main:app --reload --port 8000 --app-dir api\" \"npm run dev --prefix web\"",
-    "dev:api": "python -m uvicorn main:app --reload --port 8000 --app-dir api",
+    "dev": "concurrently -n API,WEB -c cyan,magenta \"api\\.venv\\Scripts\\python.exe -m uvicorn main:app --reload --port 8000 --app-dir api\" \"npm run dev --prefix web\"",
+    "dev:api": "api\\.venv\\Scripts\\python.exe -m uvicorn main:app --reload --port 8000 --app-dir api",
     "dev:web": "npm run dev --prefix web"
   },
   "keywords": [

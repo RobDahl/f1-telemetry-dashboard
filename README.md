@@ -55,6 +55,11 @@ From the repository root:
 
 ```bash
 npm install
+
+python -m venv api/.venv
+api/.venv/Scripts/activate
+pip install -r api/requirements.txt
+
 npm run dev
 ```
 
