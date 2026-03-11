@@ -73,6 +73,25 @@ This uses `concurrently` to launch:
    - `{ "status": "ok", "service": "f1-telemetry-api" }`
 2. Open `http://localhost:3001` and confirm the F1 dashboard shell renders.
 
+## Telemetry Endpoint
+
+`GET http://localhost:8000/telemetry`
+
+Query parameters:
+- `year` (int)
+- `session` (string, e.g. `Silverstone:R`)
+- `driver` (string, e.g. `PIA`)
+- `downsample` (bool, default `true`)
+- `max_points` (int, default `2000`) - only used when `downsample=true`
+
+Examples:
+- Downsampled (default):
+  - `http://localhost:8000/telemetry?year=2023&session=Silverstone:R&driver=PIA`
+- Disable downsampling:
+  - `http://localhost:8000/telemetry?year=2023&session=Silverstone:R&driver=PIA&downsample=false`
+- Customize downsampling:
+  - `http://localhost:8000/telemetry?year=2023&session=Silverstone:R&driver=PIA&max_points=1000`
+
 ## Troubleshooting
 
 - If backend dependencies fail to install, ensure pip is up-to-date:

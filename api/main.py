@@ -20,9 +20,21 @@ async def health_check() -> dict[str, str]:
 
 
 @app.get("/telemetry")
-async def telemetry(year: int, session: str, driver: str) -> dict:
+async def telemetry(
+    year: int,
+    session: str,
+    driver: str,
+    downsample: bool = True,
+    max_points: int = 2000,
+) -> dict:
     try:
-        return await get_driver_telemetry(year=year, session=session, driver=driver)
+        return await get_driver_telemetry(
+            year=year,
+            session=session,
+            driver=driver,
+            downsample=downsample,
+            max_points=max_points,
+        )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:  # noqa: BLE001
