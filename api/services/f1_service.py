@@ -16,6 +16,29 @@ _RESPONSE_CACHE: dict[tuple[int, str, str, str, bool, int | None], tuple[float, 
 _CACHE_LOCK = threading.Lock()
 
 
+def _format_lap_time(lap_time: object) -> str | None:
+    if lap_time is None:
+        return None
+
+    try:
+        delta = pd.to_timedelta(lap_time)
+    except Exception:
+        return str(lap_time)
+
+    if pd.isna(delta):
+        return None
+
+    total_ms = int(delta.total_seconds() * 1000)
+    minutes, remainder_ms = divmod(total_ms, 60_000)
+    seconds, milliseconds = divmod(remainder_ms, 1000)
+    return f"{minutes}:{seconds:02d}.{milliseconds:03d}"
+
+
+def _sanitize_df_for_json(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.replace([np.inf, -np.inf], np.nan)
+    return df.where(pd.notnull(df), None)
+
+
 def _downsample_df(df: pd.DataFrame, max_points: int) -> pd.DataFrame:
     if max_points <= 0:
         return df
@@ -69,7 +92,7 @@ def _load_telemetry_sync(
     resolved_event = event
     try:
         fastf1.get_session(year, resolved_event, session_type)
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         try:
             schedule = fastf1.get_event_schedule(year)
             query = resolved_event.casefold()
@@ -88,7 +111,7 @@ def _load_telemetry_sync(
                 raise
 
             resolved_event = match
-        except Exception as schedule_exc:  # noqa: BLE001
+        except Exception as schedule_exc:
             raise ValueError(
                 f"Unable to resolve session '{session}' for year {year}. "
                 f"FastF1 error: {exc}"
@@ -125,12 +148,34 @@ def _load_telemetry_sync(
     if "nGear" in telemetry.columns:
         telemetry.rename(columns={"nGear": "Gear"}, inplace=True)
 
-    telemetry = telemetry.where(pd.notnull(telemetry), None)
+    telemetry = _sanitize_df_for_json(telemetry)
+
+    top_speed = None
+    if "Speed" in telemetry.columns:
+        try:
+            speed_series = pd.to_numeric(telemetry["Speed"], errors="coerce")
+            if speed_series.notna().any():
+                top_speed = float(speed_series.max())
+        except Exception:
+            top_speed = None
 
     if downsample:
         telemetry = _downsample_df(telemetry, max_points=max_points)
 
+    telemetry.rename(
+        columns={
+            "Distance": "distance",
+            "Speed": "speed",
+            "RPM": "rpm",
+            "Gear": "gear",
+        },
+        inplace=True,
+    )
+
     records = telemetry.to_dict(orient="records")
+
+    lap_time_obj = fastest_lap.get("LapTime") if hasattr(fastest_lap, "get") else None
+    best_lap_time = _format_lap_time(lap_time_obj)
 
     result = {
         "year": year,
@@ -138,7 +183,11 @@ def _load_telemetry_sync(
         "session_type": session_type,
         "driver": driver,
         "lap_number": int(fastest_lap["LapNumber"]) if "LapNumber" in fastest_lap else None,
-        "lap_time": str(fastest_lap["LapTime"]) if "LapTime" in fastest_lap else None,
+        "lap_time": best_lap_time,
+        "summary": {
+            "top_speed_kmh": top_speed,
+            "best_lap_time": best_lap_time,
+        },
         "telemetry": records,
     }
 

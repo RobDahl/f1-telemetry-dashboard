@@ -25,7 +25,7 @@ async def telemetry(
     session: str,
     driver: str,
     downsample: bool = True,
-    max_points: int = 2000,
+    max_points: int = 500,
 ) -> dict:
     try:
         return await get_driver_telemetry(
@@ -37,7 +37,7 @@ async def telemetry(
         )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         raise HTTPException(
             status_code=500, detail=f"Failed to load telemetry: {exc}"
         ) from exc
